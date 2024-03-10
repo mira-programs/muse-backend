@@ -1,27 +1,29 @@
 package com.example.demo;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "api/v1/muse")
+@RequestMapping(path = "/users")
+@RequiredArgsConstructor
 public class MuseController {
-    private final MuseService museservice;
-
-    @Autowired
-    public MuseController(MuseService museservice) {
-        this.museservice = museservice;
-    }
+    private final MuseService museService;
 
     @GetMapping
     public List<User> getUsers() {
-        return museservice.getUsers();
+        return museService.getUsers();
     }
 
     @PostMapping
     public void registerNewUser(@RequestBody User user) {
-        museservice.addNewUser(user);
+        museService.addNewUser(user);
+    }
+
+    @DeleteMapping(path = "userId")
+    public void deleteUser(@PathVariable("userId") Long userId) {
+        museService.deleteUser(userId);
     }
 }

@@ -1,13 +1,21 @@
 package com.example.demo;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.NaturalId;
+
 import java.time.LocalDate;
 import java.time.Period;
 
 @Entity
 @Table
+@Getter
+@Setter
 public class User {
     // data members
+    @Setter
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -20,17 +28,24 @@ public class User {
     @Column
     private LocalDate dob;
     @Column
+    @NaturalId(mutable = true)
     private String email;
+    private String password;
+    private boolean isEnabled = false;
+    private String role;
 
     public User (){
     }
 
-    public User(long id, String first_name, String last_name, LocalDate dob, String email) {
+    public User(long id, String first_name, String last_name, LocalDate dob, String email, String password, boolean isEnabled, String role) {
         this.id = id;
         this.first_name = first_name;
         this.last_name = last_name;
         this.dob = dob;
         this.email = email;
+        this.password = password;
+        this.isEnabled = isEnabled;
+        this.role = role;
     }
 
     // without id
@@ -41,12 +56,12 @@ public class User {
         this.email = email;
     }
 
-    public long getId() {
-        return id;
+    public boolean isEnabled() {
+        return isEnabled;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 
     public String getFirstName() {
@@ -68,22 +83,6 @@ public class User {
     public Integer getAge() {
 
         return Period.between(this.dob, LocalDate.now()).getYears();
-    }
-
-    public LocalDate getDob() {
-        return dob;
-    }
-
-    public void setDob(LocalDate dob) {
-        this.dob = dob;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     @Override
