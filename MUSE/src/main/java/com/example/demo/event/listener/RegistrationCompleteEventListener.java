@@ -53,10 +53,10 @@ public class RegistrationCompleteEventListener implements ApplicationListener<Re
 
     public void sendVerificationEmail(String url) throws MessagingException, UnsupportedEncodingException {
         String subject = "MUSE - Email Verification";
-        String senderName = "MUSE";
-        String mailContent = "<p>Hi, "+ theUser.getFirstName()+", </p>"+"<p>Thank you for registering with MUSE! Please follow the link below to complete your registration.</p>>"
+        String senderName = "User Registration Portal Service";
+        String mailContent = "<p>Hi, "+ theUser.getFirstName()+", </p>"+"<p>Thank you for registering with MUSE! Please follow the link below to complete your registration.</p>"
                 +"<a href=\""+url+"\">Verify your email to activate your account</a>"+
-                "<p>Thank you <br> MUSE team";
+                "<p>Thank you <br> MUSE";
         MimeMessage message = mailSender.createMimeMessage();
         var messageHelper = new MimeMessageHelper(message);
         messageHelper.setFrom("dalaibrahim10@gmail.com", senderName);

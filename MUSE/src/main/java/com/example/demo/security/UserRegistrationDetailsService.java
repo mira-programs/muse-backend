@@ -15,8 +15,9 @@ public class UserRegistrationDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return museRepository.findUserByEmail(email).map(UserRegistrationDetails::new).orElseThrow(()->new UsernameNotFoundException("User not found."));
+        return museRepository.findUserByEmail(email)
+                .map(UserRegistrationDetails::new)
+                .orElseThrow(()->new UsernameNotFoundException("User not found."));
     }
-
 
 }

@@ -13,16 +13,18 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class MuseService {
+public class MuseService implements IMuserService {
 
     private final MuseRepository museRepository;
     private final PasswordEncoder passwordEncoder;
     private final VerificationTokenRepository tokenRepository;
 
+    @Override
     public List<User> getUsers () {
         return museRepository.findAll();
     }
 
+    @Override
     public User registerUser(RegistrationRequest request) {
         Optional<User> user = this.findByEmail(request.email());
         if (user.isPresent()) {
@@ -30,20 +32,40 @@ public class MuseService {
         }
         var newUser = new User();
         newUser.setFirstName(request.firstName());
-        newUser.setFirstName(request.lastName());
+        newUser.setLastName(request.lastName());
         newUser.setEmail(request.email());
         newUser.setPassword(passwordEncoder.encode(request.password()));
-        newUser.setRole(request.role());
+        newUser.setRole("ADMIN"); // creator
 
         return museRepository.save(newUser);
     }
 
-    public void addNewUser(User user) {
-        Optional<User> userOptional = findByEmail(user.getEmail());
-        if (userOptional.isPresent()) {
-            throw new IllegalStateException("email taken!");
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return museRepository.findUserByEmail(email); // query to the database to search for user with attribute = email
+    }
+
+    @Override
+    public void saveUserVerificationToken(User theUser, String token) {
+        var verificationToken = new VerificationToken(token, theUser);
+        tokenRepository.save(verificationToken);
+    }
+
+    @Override
+    public String validateToken(String theToken) {
+        VerificationToken token = tokenRepository.findByToken(theToken);
+        if (token == null) {
+            return "Invalid verification token.";
         }
+        User user = token.getUser();
+        Calendar calendar = Calendar.getInstance();
+        if ((token.getExpirationTime().getTime() - calendar.getTime().getTime()) <=0 ) {
+            tokenRepository.delete(token);
+            return "Token has already expired.";
+        }
+        user.setEnabled(true);
         museRepository.save(user);
+        return "Valid.";
     }
 
     public void deleteUser(Long userId) {
@@ -55,29 +77,12 @@ public class MuseService {
         museRepository.deleteById(userId);
     }
 
-    public Optional<User> findByEmail(String email) {
-        return museRepository.findUserByEmail(email);
-    }
-
-    public void saveUserVerificationToken(User theUser, String token) {
-        var verificationToken = new VerificationToken(token, theUser);
-        tokenRepository.save(verificationToken);
-    }
-
-    public String validateToken(String theToken) {
-        VerificationToken token = tokenRepository.findByToken(theToken);
-        if (token == null) {
-            return "Invalid verification token.";
-        }
-        User user = token.getUser();
-        Calendar calendar = Calendar.getInstance();
-        if (token.getExpirationTime().getTime() - calendar.getTime().getTime() <=0) {
-            tokenRepository.delete(token);
-            return "Token has already expired.";
-        }
-
-        user.setEnabled(true);
-        museRepository.save(user);
-        return "Valid.";
+    @Override
+    public VerificationToken generateNewVerificationToken(String oldToken) {
+        VerificationToken verificationToken = tokenRepository.findByToken(oldToken);
+        var tokenExpirationTime = new VerificationToken();
+        verificationToken.setToken(UUID.randomUUID().toString());
+        verificationToken.setExpirationTime(tokenExpirationTime.getTokenExpirationTime());
+        return tokenRepository.save(verificationToken);
     }
 }
