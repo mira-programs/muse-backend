@@ -7,6 +7,9 @@ const bcrypt = require('bcrypt');
 const User = require('./models/User');
 const app = express();
 const PORT = 8080;
+const postRoutes = require('./routes');
+const multer = require('multer');
+
 
 app.use(express.json());
 app.use(cors());
@@ -130,6 +133,12 @@ app.get('/verify-email', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+
+app.use('/uploads', express.static('uploads'));
+//Post route
+app.use('/api/posts', postRoutes);
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
