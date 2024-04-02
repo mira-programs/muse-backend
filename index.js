@@ -7,8 +7,8 @@ const bcrypt = require('bcrypt');
 const User = require('./models/User');
 const app = express();
 const PORT = 8080;
-const postRoutes = require('./routes');
 const multer = require('multer');
+const postRoutes = require('./routes');
 
 
 app.use(express.json());
@@ -137,7 +137,7 @@ app.get('/verify-email', async (req, res) => {
 
 app.use('/uploads', express.static('uploads'));
 //Post route
-app.use('/api/posts', postRoutes);
+app.use('/posts', postRoutes);
 
 
 app.listen(PORT, () => {
