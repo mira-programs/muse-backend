@@ -1,8 +1,8 @@
 // routes/posts.js
 const express = require('express');
 const router = express.Router();
-const upload = require('../config');
-const Post = require('../models/Post'); // Adjust the path as necessary
+const upload = require('./config');
+const Post = require('./models/Post'); // Adjust the path as necessary
 
 
 // POST route to create a new post
