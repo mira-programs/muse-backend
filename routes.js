@@ -5,7 +5,7 @@ const upload = require('./config');
 const Post = require('./models/Post'); // Adjust the path as necessary
 
 
-// POST route to create a new post
+// POST route to create a new post and store in the database
 router.post('/posts', upload.array('images'), async (req, res) => {
     const { title, content, author } = req.body;
     let imageUrls = []; // Extract imageUrl separately to handle if it's not provided
@@ -31,6 +31,7 @@ router.post('/posts', upload.array('images'), async (req, res) => {
     }
 });
 
+//gets all the posts of your user 
 router.get('/user-posts/:userId', async (req, res) => {
     const userId = req.params.userId;
     try {
