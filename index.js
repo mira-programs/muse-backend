@@ -11,6 +11,7 @@ const multer = require('multer');
 const router = express.Router();
 const upload = require('./config');
 const Post = require('./models/Post');
+const fs = require('fs');
 
 app.use(express.json());
 app.use(cors());
@@ -139,23 +140,32 @@ app.get('/verify-email', async (req, res) => {
 app.use('/uploads', express.static('uploads'));
 
 
-
-app.post('/posts', upload.array('images'), async (req, res) => {
+app.post('/posts', upload.array('imageUrls'), async (req, res) => {
   const { title, content, author } = req.body;
-  let imageUrls = []; // Extract imageUrl separately to handle if it's not provided
+  let imageBase64Strings = [];
 
-  // If imageUrl is not provided or you need to initialize it differently, adjust here
+  // Convert each uploaded image to base64
   if (req.files && req.files.length > 0) {
-      // Assuming the path attribute contains the access URL/path for each image
-      imageUrls = req.files.map(file => file.path);
-  }// Ensures imageUrl is an array, even if it's not provided
+      imageBase64Strings = await Promise.all(req.files.map(file => {
+          return new Promise((resolve, reject) => {
+              fs.readFile(file.path, (err, data) => {
+                  if (err) reject(err);
+                  // Convert image file to base64 string
+                  const base64Image = Buffer.from(data).toString('base64');
+                  resolve(base64Image);
+              });
+          });
+      }));
+      // Optionally, delete the files after converting them if they are no longer needed
+      req.files.forEach(file => fs.unlinkSync(file.path));
+  }
 
   try {
       const newPost = new Post({
           title,
           content,
           author,
-          imageUrls // This can now safely be an empty array if no image URLs were provided
+          imageUrls: imageBase64Strings // Now storing base64 strings
       });
 
       await newPost.save();
@@ -165,6 +175,7 @@ app.post('/posts', upload.array('images'), async (req, res) => {
   }
 });
 
+// test on postman: localhost:8080/user-posts/660c6bd808dd0cd44dcb82ff
 //gets all the posts of your user 
 app.get('/user-posts/:userId', async (req, res) => {
   const userId = req.params.userId;
@@ -178,8 +189,6 @@ app.get('/user-posts/:userId', async (req, res) => {
 });
 
 module.exports = router;
-
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

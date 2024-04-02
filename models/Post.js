@@ -15,7 +15,7 @@ const postSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    imageUrl: [String], // Optional but it allows for multiple images to be linked to a single post.
+    imageUrls: [String], // Optional but it allows for multiple images to be linked to a single post.
     // categories: [{
     //     type: mongoose.Schema.Types.ObjectId,
     //     ref: 'Category'
