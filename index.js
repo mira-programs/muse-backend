@@ -9,7 +9,9 @@ const app = express();
 const PORT = 8080;
 const postRoutes = require('./routes');
 const multer = require('multer');
-
+const router = express.Router();
+const upload = require('./config');
+const Post = require('./models/Post');
 
 app.use(express.json());
 app.use(cors());
