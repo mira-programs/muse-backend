@@ -37,15 +37,18 @@ const jwtSecretKey = '09f26e402586e2faa8da4c98a35f1b20d6cce13f0e7b48a69f14cb7db0
 
 // Register user
 app.post('/register', async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, username, email, password} = req.body;
 
   try {
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ $or: [{ email }, { username }] });
 
-    if (user) {
-      return res.status(400).send('User already exists');
-    }
-
+      if (user) {
+          if (user.email === email) {
+              return res.status(400).send('Email already exists');
+          } else {
+              return res.status(400).send('Username already exists');
+          }
+      }
     // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -53,6 +56,7 @@ app.post('/register', async (req, res) => {
     user = new User({
       firstName,
       lastName,
+      username,
       email,
       password: hashedPassword,
       emailVerified: false
@@ -80,7 +84,7 @@ app.post('/register', async (req, res) => {
 
 // Login user
 app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
   try {
     // Check if user exists

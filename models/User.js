@@ -6,10 +6,14 @@ const userSchema = new mongoose.Schema({
         type:String,
         required: true
     },
-
     lastName: {
         type:String,
         required: true
+    },
+    username: {
+        type: String,
+        required: true,
+        unique: true // Ensures usernames are unique across the database
     },
 
     email: {
@@ -22,6 +26,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true
+    },
+    username: {
+        type: String,
+        required: true,
+        unique: true // Ensures usernames are unique across the database
     },
 
     emailVerified: {
