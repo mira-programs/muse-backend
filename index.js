@@ -6,11 +6,13 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('./models/User');
 const app = express();
+app.use(express.json()); // To parse JSON bodies
 const PORT = 8080;
 const multer = require('multer');
 const router = express.Router();
 const upload = require('./config');
 const Post = require('./models/Post');
+const Message = require('./models/Message'); 
 const fs = require('fs');
 
 app.use(express.json());
@@ -137,7 +139,7 @@ app.get('/verify-email', async (req, res) => {
 });
 
 
-app.use('/uploads', express.static('uploads'));
+//app.use('/uploads', express.static('uploads'));
 
 
 app.post('/posts', upload.array('imageUrls'), async (req, res) => {
@@ -188,6 +190,88 @@ app.get('/user-posts/:userId', async (req, res) => {
   }
 });
 
+
+/*const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token == null) return res.sendStatus(401);
+
+  jwt.verify(token, jwtSecretKey, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};*/
+
+const authenticateToken = (req, res, next) => {
+  console.log("Authorization Header:", req.headers['authorization']);  // Log the full Authorization header
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token == null) {
+    console.log("No token found");
+    return res.sendStatus(401);
+  }
+
+  jwt.verify(token, jwtSecretKey, (err, user) => {
+    if (err) {
+      console.log("Token verification failed:", err);
+      return res.sendStatus(403);
+    }
+    console.log("Token verified, user:", user);
+    req.user = user;
+    next();
+  });
+};
+
+
+
+// Get messages for a user
+app.get('/messages', authenticateToken, (req, res) => {
+  Message.find({ receiver: req.user.userId })
+         .sort({ timestamp: -1 })
+         .limit(50)
+         .populate('sender receiver')
+         .then(messages => res.json(messages))
+         .catch(err => res.status(500).json({ message: 'Error fetching messages', error: err }));
+});
+
+// Send a new message
+/*app.post('/messages', authenticateToken, (req, res) => {
+  const { receiver, message } = req.body;
+  const newMessage = new Message({ sender: req.user.userId, receiver, message });
+
+  newMessage.save()
+    .then(() => res.status(201).json({ message: 'Message sent successfully' }))
+    .catch(err => res.status(500).json({ message: 'Error sending message', error: err }));
+});*/
+
+app.post('/messages', authenticateToken,  (req, res) => {
+  //console.log("File:", req.file); // This will log the file info
+  console.log("Body:", req.body); // This will log the body content
+
+  const { receiver, message } = req.body;
+  if (!receiver) {
+    return res.status(400).json({ message: "Receiver not defined" });
+  }
+  // let mediaUrl =null;
+  // if (req.file) {
+  //     mediaUrl = `/uploads/${req.file.filename}`; // This will store the path to the uploaded file
+  // }
+
+  const newMessage = new Message({
+      sender: req.user.userId,
+      receiver,
+      message
+      //mediaUrl
+  });
+
+  newMessage.save()
+      .then(() => res.status(201).json({ message: 'Message sent successfully', data: newMessage }))
+      .catch(err => res.status(500).json({ message: 'Error sending message', error: err }));
+});
+
+
+app.use('/uploads', express.static('uploads'));
 module.exports = router;
 
 app.listen(PORT, () => {
