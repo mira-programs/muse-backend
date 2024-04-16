@@ -194,6 +194,26 @@ app.get('/user-posts/:userId', async (req, res) => {
   }
 });
 
+// Get all posts under a one or group of specific tags
+app.get('/posts-by-tags', async (req, res) => {
+  const tags = req.query.tags;
+  if (!tags) {
+      return res.status(400).send('No tags specified');
+  }
+  const tagArray = tags.split(','); // Assuming tags are sent as comma-separated values
+
+  try {
+      const posts = await Post.find({ tags: { $all: tagArray } });
+      if (posts.length === 0) {
+          return res.status(404).send('No posts found with the specified tags');
+      }
+      res.json(posts);
+  } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+  }
+});
+
 
 // autheticate user so that he/she are legitimate message senders by generating a token
 const authenticateToken = (req, res, next) => {
@@ -226,7 +246,6 @@ app.get('/messages', authenticateToken, (req, res) => {
          .then(messages => res.json(messages))
          .catch(err => res.status(500).json({ message: 'Error fetching messages', error: err }));
 });
-
 
 // stores message by message in database
 app.post('/messages', authenticateToken,  (req, res) => {

@@ -15,12 +15,14 @@ const postSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    imageUrls: [String], // Optional but it allows for multiple images to be linked to a single post.
-    // categories: [{
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Category'
-    // }], // More structured category system using ObjectId references
-    tags: [{ type: String }], // Simple array of strings for tags
+    imageUrls: [String], // Optional
+    tags: [{
+        type: String,
+        enum: ['Science Fiction', 'Fantasy', 'Game', 'Anime', 'Cartoon', 'Fanfiction', 
+        'Horror', 'Biography', 'Thriller', 'Minimalism', 'Expressionsim', 'Impressionism', 
+        'Pop Art', 'Renaissance', 'Abstract', 'Modern', 'Romance', 'Adventure', 'History', 'Technology', 'Futurism'],
+        required: true
+    }],
     comments: [{ // Nested schema for comments directly within a post
         body: String,
         date: { type: Date, default: Date.now },
