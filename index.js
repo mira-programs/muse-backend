@@ -104,7 +104,7 @@ app.post('/login', async (req, res) => {
     const token = jwt.sign({ userId: user._id }, jwtSecretKey, { expiresIn: '1h' });
 
     // Respond with token and redirect to homepage
-    // You might want to send the token back to the client to store in the client's session
+    // send the token back to the client to store in the client's session
     res.json({
       token: token,
       message: 'Login successful. Redirecting to homepage...'
@@ -177,7 +177,7 @@ app.post('/posts', upload.array('imageUrls'), async (req, res) => {
   }
 });
 
-// test on postman: localhost:8080/user-posts/660c6bd808dd0cd44dcb82ff
+// test on postman: localhost:8080/user-posts/user id
 //gets all the posts of your user 
 app.get('/user-posts/:userId', async (req, res) => {
   const userId = req.params.userId;
@@ -191,18 +191,7 @@ app.get('/user-posts/:userId', async (req, res) => {
 });
 
 
-/*const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (token == null) return res.sendStatus(401);
-
-  jwt.verify(token, jwtSecretKey, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-};*/
-
+// autheticate user so that he/she are legitimate message senders by generating a token
 const authenticateToken = (req, res, next) => {
   console.log("Authorization Header:", req.headers['authorization']);  // Log the full Authorization header
   const authHeader = req.headers['authorization'];
@@ -224,8 +213,7 @@ const authenticateToken = (req, res, next) => {
 };
 
 
-
-// Get messages for a user
+// Get the receiver's messages
 app.get('/messages', authenticateToken, (req, res) => {
   Message.find({ receiver: req.user.userId })
          .sort({ timestamp: -1 })
@@ -235,34 +223,20 @@ app.get('/messages', authenticateToken, (req, res) => {
          .catch(err => res.status(500).json({ message: 'Error fetching messages', error: err }));
 });
 
-// Send a new message
-/*app.post('/messages', authenticateToken, (req, res) => {
-  const { receiver, message } = req.body;
-  const newMessage = new Message({ sender: req.user.userId, receiver, message });
 
-  newMessage.save()
-    .then(() => res.status(201).json({ message: 'Message sent successfully' }))
-    .catch(err => res.status(500).json({ message: 'Error sending message', error: err }));
-});*/
-
+// stores message by message in database
 app.post('/messages', authenticateToken,  (req, res) => {
-  //console.log("File:", req.file); // This will log the file info
   console.log("Body:", req.body); // This will log the body content
 
   const { receiver, message } = req.body;
   if (!receiver) {
     return res.status(400).json({ message: "Receiver not defined" });
   }
-  // let mediaUrl =null;
-  // if (req.file) {
-  //     mediaUrl = `/uploads/${req.file.filename}`; // This will store the path to the uploaded file
-  // }
 
   const newMessage = new Message({
       sender: req.user.userId,
       receiver,
       message
-      //mediaUrl
   });
 
   newMessage.save()
@@ -271,6 +245,8 @@ app.post('/messages', authenticateToken,  (req, res) => {
 });
 
 
+
+// end
 app.use('/uploads', express.static('uploads'));
 module.exports = router;
 
