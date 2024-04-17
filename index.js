@@ -194,20 +194,26 @@ app.get('/user-posts/:userId', async (req, res) => {
   }
 });
 
-// Get all posts under a one or group of specific tags
-app.get('/posts-by-tags', async (req, res) => {
-  const tags = req.query.tags;
-  if (!tags) {
-      return res.status(400).send('No tags specified');
+
+// Unified search route for tags and usernames
+app.get('/search', async (req, res) => {
+  const { type, query } = req.query;
+
+  if (!query) {
+      return res.status(400).send('Search query cannot be empty');
   }
-  const tagArray = tags.split(','); // Assuming tags are sent as comma-separated values
 
   try {
-      const posts = await Post.find({ tags: { $all: tagArray } });
-      if (posts.length === 0) {
-          return res.status(404).send('No posts found with the specified tags');
+      if (type === 'tags') {
+          const tagArray = query.split(',');
+          const posts = await Post.find({ tags: { $all: tagArray } });
+          res.json(posts);
+      } else if (type === 'username') {
+          const users = await User.find({ username: new RegExp('^' + query, 'i') }, 'username _id');
+          res.json(users);
+      } else {
+          res.status(400).send('Invalid search type specified');
       }
-      res.json(posts);
   } catch (error) {
       console.error(error);
       res.status(500).send('Server error');
@@ -268,6 +274,59 @@ app.post('/messages', authenticateToken,  (req, res) => {
 });
 
 
+// Endpoint to update or create profile with profile picture
+app.post('/profile', upload.single('profilePicture'), async (req, res) => {
+  const { firstName, lastName, location, about, isOpenToCollaborate, experiences } = req.body;
+  let profilePicture = '';
+
+  // Convert the uploaded image to base64
+  if (req.file) {
+      const imgBuffer = req.file.buffer; // Accessing the file buffer
+      profilePicture = imgBuffer.toString('base64');
+  }
+
+  // Assuming a user ID is used to find the existing profile
+  const userId = req.body.userId; // This should come from authenticated session or token
+
+  try {
+      const profile = await Profile.findOneAndUpdate(
+          { user: userId }, // Use the user ID as a reference
+          {
+              profilePicture,
+              firstName,
+              lastName,
+              location,
+              about,
+              isOpenToCollaborate,
+              experiences: JSON.parse(experiences)
+          },
+          { new: true, upsert: true } // Creates a new document if no document matches the filter
+      );
+      res.status(201).json(profile);
+  } catch (error) {
+      res.status(500).send('Error updating profile: ' + error.message);
+  }
+});
+
+// Endpoint to get the 10 most rcent posts
+app.get('/recent-posts', async (req, res) => {
+  try {
+      const posts = await Post.find({})
+                              .sort({ createdAt: -1 }) // Sort by createdAt timestamp, descending
+                              .limit(10); // Limit to 10 posts
+      res.json(posts.map(post => ({ postId: post._id, title: post.title }))); // Simplified response for clarity
+  } catch (error) {
+      res.status(500).send('Error retrieving posts: ' + error.message);
+  }
+});
+
+// to be added in the front endas the code correspongin to this backend segment
+/*setInterval(() => {
+    fetch('http://localhost:3000/recent-posts')
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error fetching posts:', error));
+}, 60000); */
 
 // end
 app.use('/uploads', express.static('uploads'));

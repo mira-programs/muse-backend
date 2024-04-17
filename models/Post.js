@@ -18,7 +18,7 @@ const postSchema = new mongoose.Schema({
     imageUrls: [String], // Optional
     tags: [{
         type: String,
-        enum: ['Science Fiction', 'Fantasy', 'Game', 'Anime', 'Cartoon', 'Fanfiction', 
+        enum: ['Science Fiction', 'Fantasy', 'Gaming', 'Anime', 'Cartoon', 'Fanfiction', 
         'Horror', 'Biography', 'Thriller', 'Minimalism', 'Expressionsim', 'Impressionism', 
         'Pop Art', 'Renaissance', 'Abstract', 'Modern', 'Romance', 'Adventure', 'History', 'Technology', 'Futurism'],
         required: true
