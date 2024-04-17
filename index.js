@@ -136,9 +136,33 @@ app.get('/verify-email', async (req, res) => {
 });
 
 
-// option to upload images
-app.post('/posts', upload.array('imageUrls'), async (req, res) => {
-  const { title, content, author } = req.body;
+// autheticate user so that he/she are legitimate message senders by generating a token
+const authenticateToken = (req, res, next) => {
+  console.log("Authorization Header:", req.headers['authorization']);  // Log the full Authorization header
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token == null) {
+    console.log("No token found");
+    return res.sendStatus(401);
+  }
+
+  jwt.verify(token, jwtSecretKey, (err, user) => {
+    if (err) {
+      console.log("Token verification failed:", err);
+      return res.sendStatus(403);
+    }
+    console.log("Token verified, user:", user);
+    req.user = user;
+    next();
+  });
+};
+
+
+// upload posts 
+// INCOMPLETE! NEED A WAY TO STORE AND REFRESH TOKEN SO AS TO NOT END A USER'S SESSION
+app.post('/posts', authenticateToken, upload.array('imageUrls'), async (req, res) => {
+  const { title, content } = req.body;
+  const author = req.user.userId;
   let imageBase64Strings = [];
 
   // Convert each uploaded image to base64
@@ -210,28 +234,6 @@ app.get('/search', async (req, res) => {
       res.status(500).send('Server error');
   }
 });
-
-
-// autheticate user so that he/she are legitimate message senders by generating a token
-const authenticateToken = (req, res, next) => {
-  console.log("Authorization Header:", req.headers['authorization']);  // Log the full Authorization header
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (token == null) {
-    console.log("No token found");
-    return res.sendStatus(401);
-  }
-
-  jwt.verify(token, jwtSecretKey, (err, user) => {
-    if (err) {
-      console.log("Token verification failed:", err);
-      return res.sendStatus(403);
-    }
-    console.log("Token verified, user:", user);
-    req.user = user;
-    next();
-  });
-};
 
 
 // Get the receiver's messages
