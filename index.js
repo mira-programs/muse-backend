@@ -82,33 +82,26 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Login user
+// Login user via email and password
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).send('Account does not exist.');
+      return res.status(400).json({ message: 'Account does not exist.' });
     }
 
-    // Check if the password is correct
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).send('Invalid credentials.');
+      return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
-    // Check if the email has been verified
     if (!user.emailVerified) {
-      return res.status(401).send('Please verify your email before logging in.');
+      return res.status(401).json({ message: 'Please verify your email before logging in.' });
     }
 
-    // User matched and email is verified, create a token
     const token = jwt.sign({ userId: user._id }, jwtSecretKey, { expiresIn: '1h' });
-
-    // Respond with token and redirect to homepage
-    // send the token back to the client to store in the client's session
     res.json({
       token: token,
       message: 'Login successful. Redirecting to homepage...'
@@ -116,7 +109,7 @@ app.post('/login', async (req, res) => {
     
   } catch (error) {
     console.error(error);
-    res.status(500).send('Server error during login.');
+    res.status(500).json({ message: 'Server error during login.' });
   }
 });
 
@@ -135,17 +128,15 @@ app.get('/verify-email', async (req, res) => {
     user.emailVerified = true;
     await user.save();
 
-    // Redirect user to the homepage after verification
-    res.redirect('http://localhost:5173/homepage');
+    // Redirect user to the home page after verification
+    res.redirect('http://localhost:5173/home');
   } catch (error) {
     res.status(500).send('Server error');
   }
 });
 
 
-//app.use('/uploads', express.static('uploads'));
-
-
+// option to upload images
 app.post('/posts', upload.array('imageUrls'), async (req, res) => {
   const { title, content, author } = req.body;
   let imageBase64Strings = [];
