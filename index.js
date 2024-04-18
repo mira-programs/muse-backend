@@ -135,26 +135,29 @@ app.get('/verify-email', async (req, res) => {
   }
 });
 
-
-// autheticate user so that he/she are legitimate message senders by generating a token
 const authenticateToken = (req, res, next) => {
-  console.log("Authorization Header:", req.headers['authorization']);  // Log the full Authorization header
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (token == null) {
-    console.log("No token found");
-    return res.sendStatus(401);
-  }
-
-  jwt.verify(token, jwtSecretKey, (err, user) => {
-    if (err) {
-      console.log("Token verification failed:", err);
-      return res.sendStatus(403);
+    console.log("Authorization Header:", req.headers['authorization']);  // Log the full Authorization header
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) {
+        console.log("No token found");
+        return res.sendStatus(401);
     }
-    console.log("Token verified, user:", user);
-    req.user = user;
-    next();
-  });
+
+    jwt.verify(token, jwtSecretKey, (err, user) => {
+        if (err) {
+            console.log("Token verification failed:", err);
+            return res.sendStatus(403);
+        }
+        console.log("Token verified, user:", user);
+
+        // Extend token if verification was successful
+        const refreshedToken = jwt.sign({ userId: user.userId }, jwtSecretKey, { expiresIn: '2h' });  // Extend token for 2 hours
+        res.setHeader('Authorization', 'Bearer ' + refreshedToken);  // Send the refreshed token back in the response header
+
+        req.user = user;
+        next();
+    });
 };
 
 
