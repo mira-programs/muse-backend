@@ -198,6 +198,7 @@ app.post('/posts', authenticateToken, upload.array('imageUrls'), async (req, res
 
 // test on postman: localhost:8080/user-posts/user id
 //gets all the posts of your user 
+// TO BE USED TO DISPLAY POSTS ON PROFILE
 app.get('/user-posts/:userId', async (req, res) => {
   const userId = req.params.userId;
   try {
@@ -215,23 +216,32 @@ app.get('/search', async (req, res) => {
   const { type, query } = req.query;
 
   if (!query) {
-      return res.status(400).send('Search query cannot be empty');
+      return res.status(400).json({ error: 'Search query cannot be empty' });
   }
 
   try {
       if (type === 'tags') {
           const tagArray = query.split(',');
+          if (tagArray.length === 0) {
+              return res.status(400).json({ error: 'Tag list cannot be empty' });
+          }
           const posts = await Post.find({ tags: { $all: tagArray } });
+          if (posts.length === 0) {
+              return res.status(404).json({ error: 'No posts found with the specified tags' });
+          }
           res.json(posts);
       } else if (type === 'username') {
           const users = await User.find({ username: new RegExp('^' + query, 'i') }, 'username _id');
+          if (users.length === 0) {
+              return res.status(404).json({ error: 'No users found with the specified username' });
+          }
           res.json(users);
       } else {
-          res.status(400).send('Invalid search type specified');
+          res.status(400).json({ error: 'Invalid search type specified' });
       }
   } catch (error) {
       console.error(error);
-      res.status(500).send('Server error');
+      res.status(500).json({ error: 'Server error', message: error.message });
   }
 });
 

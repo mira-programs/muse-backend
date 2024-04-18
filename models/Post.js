@@ -23,17 +23,6 @@ const postSchema = new mongoose.Schema({
         'Pop Art', 'Renaissance', 'Abstract', 'Modern', 'Romance', 'Adventure', 'History', 'Technology', 'Futurism'],
         required: true
     }],
-    comments: [{ // Nested schema for comments directly within a post
-        body: String,
-        date: { type: Date, default: Date.now },
-        commenter: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-    }],
-    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Users who liked the post
-    // status: {
-    //     type: String,
-    //     enum: ['draft', 'published'],
-    //     default: 'draft'
-    //     // Post status to manage drafts and published posts
      },  
     {timestamps: true }); // Mongoose manages createdAt and updatedAt fields automatically
 
