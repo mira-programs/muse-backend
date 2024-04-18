@@ -38,7 +38,7 @@ const jwtSecretKey = '09f26e402586e2faa8da4c98a35f1b20d6cce13f0e7b48a69f14cb7db0
 
 
 
-/**************************************************** REGISTER AND LOGIN ************************************************************/
+// /*************************************************** REGISTER AND LOGIN ************************************************************/
 // REGISTER ----------------------------------------------------------------------------------------------------------------
 app.post('/register', async (req, res) => {
   const { firstName, lastName, username, email, password} = req.body;
@@ -141,6 +141,10 @@ app.get('/verify-email', async (req, res) => {
   }
 });
 
+
+
+
+/*************************************************** TOKEN ************************************************************/
 const authenticateToken = (req, res, next) => {
     console.log("Authorization Header:", req.headers['authorization']);  // Log the full Authorization header
     const authHeader = req.headers['authorization'];
@@ -292,7 +296,7 @@ app.get('/recent-posts', async (req, res) => {
 /**************************************************** MESSAGES ************************************************************/
 // GET MESSAGES ------------------------------------------------------------------------------------------------------------
 // Get the receiver's messages
-app.get('/messages', authenticateToken, (req, res) => {
+app.get('/chats/:userId', authenticateToken, (req, res) => {
   Message.find({ receiver: req.user.userId })
          .sort({ timestamp: -1 })
          .limit(50)
@@ -304,7 +308,7 @@ app.get('/messages', authenticateToken, (req, res) => {
 
 // STORE MESSAGES -----------------------------------------------------------------------------------------------------------
 // stores message by message in database
-app.post('/messages', authenticateToken,  (req, res) => {
+app.post('/chats/:userId', authenticateToken,  (req, res) => {
   console.log("Body:", req.body); // This will log the body content
 
   const { receiver, message } = req.body;
