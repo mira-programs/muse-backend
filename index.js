@@ -348,7 +348,7 @@ app.post('/profile', upload.single('profilePicture'), async (req, res) => {
   const userId = req.body.userId; // This should come from authenticated session or token
 
   try {
-      const profile = await Profile.findOneAndUpdate(
+      const profile = await profile.findOneAndUpdate(
           { user: userId }, // Use the user ID as a reference
           {
               profilePicture,
