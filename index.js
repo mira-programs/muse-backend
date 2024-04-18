@@ -328,6 +328,57 @@ app.post('/chats/:userId', authenticateToken,  (req, res) => {
 });
 
 
+// Get chat list: all users a person has messaged or received messages from
+app.get('/chats', authenticateToken, async (req, res) => {
+  // const userId = req.user.userId;  // Set by your authenticateToken middleware
+  const userId = new mongoose.Types.ObjectId(req.user.userId);  // Convert string ID to ObjectId
+   try {
+     const chatUsers = await Message.aggregate([
+       {
+         $match: {
+           $or: [{ sender: userId }, { receiver: userId }]
+         }
+       },
+       {
+         $group: {
+           _id: null,
+           users: { $addToSet: "$sender", $addToSet: "$receiver" }
+         }
+       },
+       {
+         $project: {
+           users: 1,
+           _id: 0
+         }
+       },
+       { $unwind: "$users" }, // Flatten the users array
+       { $match: { users: { $ne: userId } } }, // Exclude the current user's id
+       {
+         $lookup: {
+           from: "users", // Assuming 'users' is your collection name for User documents
+           localField: "users",
+           foreignField: "_id",
+           as: "userDetails"
+         }
+       },
+       { $unwind: "$userDetails" },
+       {
+         $project: { // Adjust fields according to your User model
+           userId: "$userDetails._id",
+           username: "$userDetails.username",
+           email: "$userDetails.email"
+         }
+       }
+     ]);
+ 
+     res.json({ chatList: chatUsers });
+   } catch (error) {
+     console.error("Failed to retrieve chat list:", error);
+     res.status(500).send("Server error while retrieving chat list");
+   }
+ });
+
+
 
 
 
