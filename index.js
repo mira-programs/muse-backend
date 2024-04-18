@@ -35,7 +35,11 @@ const transporter = nodemailer.createTransport({
 // JWT secret key
 const jwtSecretKey = '09f26e402586e2faa8da4c98a35f1b20d6cce13f0e7b48a69f14cb7db017973f'; // Change this to a strong secret key
 
-// Register user
+
+
+
+/**************************************************** REGISTER AND LOGIN ************************************************************/
+// REGISTER ----------------------------------------------------------------------------------------------------------------
 app.post('/register', async (req, res) => {
   const { firstName, lastName, username, email, password} = req.body;
 
@@ -82,7 +86,8 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Login user via email and password
+
+// LOGIN ----------------------------------------------------------------------------------------------------------------------
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -113,7 +118,8 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Email verification
+
+// EMAIL VERIFICATION ---------------------------------------------------------------------------------------------------------
 app.get('/verify-email', async (req, res) => {
   const { token } = req.query;
 
@@ -161,7 +167,11 @@ const authenticateToken = (req, res, next) => {
 };
 
 
-// upload posts 
+
+
+
+/**************************************************** POSTS ************************************************************/
+// UPLOAD POSTS -------------------------------------------------------------------------------------------------------------
 // INCOMPLETE! NEED A WAY TO STORE AND REFRESH TOKEN SO AS TO NOT END A USER'S SESSION
 app.post('/posts', authenticateToken, upload.array('imageUrls'), async (req, res) => {
   const { title, content } = req.body;
@@ -199,9 +209,10 @@ app.post('/posts', authenticateToken, upload.array('imageUrls'), async (req, res
   }
 });
 
+
+// DISPLAY USER'S POSTS ------------------------------------------------------------------------------------------------------
 // test on postman: localhost:8080/user-posts/user id
 //gets all the posts of your user 
-// TO BE USED TO DISPLAY POSTS ON PROFILE
 app.get('/user-posts/:userId', async (req, res) => {
   const userId = req.params.userId;
   try {
@@ -214,6 +225,11 @@ app.get('/user-posts/:userId', async (req, res) => {
 });
 
 
+
+
+
+/**************************************************** HOMEPAGE ************************************************************/
+// SEARCH BY TAG/USERNAME ----------------------------------------------------------------------------------------------------
 // Unified search route for tags and usernames
 app.get('/search', async (req, res) => {
   const { type, query } = req.query;
@@ -248,7 +264,33 @@ app.get('/search', async (req, res) => {
   }
 });
 
+// DISPLAY 10 POSTS ON HOMEPAGE ------------------------------------------------------------------------------------------------
+// Endpoint to get the 10 most recent posts
+app.get('/recent-posts', async (req, res) => {
+  try {
+      const posts = await Post.find({})
+                              .sort({ createdAt: -1 }) // Sort by createdAt timestamp, descending
+                              .limit(10); // Limit to 10 posts
+      res.json(posts.map(post => ({ postId: post._id, title: post.title }))); // Simplified response for clarity
+  } catch (error) {
+      res.status(500).send('Error retrieving posts: ' + error.message);
+  }
+});
 
+// to be added in the front endas the code correspongin to this backend segment
+/*setInterval(() => {
+    fetch('http://localhost:3000/recent-posts')
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error fetching posts:', error));
+}, 60000); */
+
+
+
+
+
+/**************************************************** MESSAGES ************************************************************/
+// GET MESSAGES ------------------------------------------------------------------------------------------------------------
 // Get the receiver's messages
 app.get('/messages', authenticateToken, (req, res) => {
   Message.find({ receiver: req.user.userId })
@@ -259,6 +301,8 @@ app.get('/messages', authenticateToken, (req, res) => {
          .catch(err => res.status(500).json({ message: 'Error fetching messages', error: err }));
 });
 
+
+// STORE MESSAGES -----------------------------------------------------------------------------------------------------------
 // stores message by message in database
 app.post('/messages', authenticateToken,  (req, res) => {
   console.log("Body:", req.body); // This will log the body content
@@ -280,7 +324,12 @@ app.post('/messages', authenticateToken,  (req, res) => {
 });
 
 
-// Endpoint to update or create profile with profile picture
+
+
+
+/**************************************************** PROFILE ************************************************************/
+// EDIT PROFILE ------------------------------------------------------------------------------------------------------------------
+// Endpoint to update or create profile with profile picture, INCOMPLETE, USERID SHOULD COME FROM AUTHENTICATED SESSION
 app.post('/profile', upload.single('profilePicture'), async (req, res) => {
   const { firstName, lastName, location, about, isOpenToCollaborate, experiences } = req.body;
   let profilePicture = '';
@@ -313,26 +362,6 @@ app.post('/profile', upload.single('profilePicture'), async (req, res) => {
       res.status(500).send('Error updating profile: ' + error.message);
   }
 });
-
-// Endpoint to get the 10 most rcent posts
-app.get('/recent-posts', async (req, res) => {
-  try {
-      const posts = await Post.find({})
-                              .sort({ createdAt: -1 }) // Sort by createdAt timestamp, descending
-                              .limit(10); // Limit to 10 posts
-      res.json(posts.map(post => ({ postId: post._id, title: post.title }))); // Simplified response for clarity
-  } catch (error) {
-      res.status(500).send('Error retrieving posts: ' + error.message);
-  }
-});
-
-// to be added in the front endas the code correspongin to this backend segment
-/*setInterval(() => {
-    fetch('http://localhost:3000/recent-posts')
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error('Error fetching posts:', error));
-}, 60000); */
 
 // end
 app.use('/uploads', express.static('uploads'));
