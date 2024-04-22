@@ -14,6 +14,7 @@ const upload = require('./config');
 const Post = require('./models/Post');
 const Message = require('./models/Message'); 
 const fs = require('fs');
+const dir = './uploads';
 
 app.use(express.json());
 app.use(cors());
@@ -106,10 +107,15 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Please verify your email before logging in.' });
     }
 
-    const token = jwt.sign({ userId: user._id }, jwtSecretKey, { expiresIn: '1h' });
+    // const token = jwt.sign({ userId: user._id }, jwtSecretKey, { expiresIn: '1h' });
+    // res.json({
+    //   token: token,
+    //   email: user.email,
+    //   message: 'Login successful. Redirecting to homepage...'
+    // });
+
     res.json({
-      token: token,
-      email: user.email,
+      userId: user._id,  // ensure this is the actual ID from MongoDB
       message: 'Login successful. Redirecting to homepage...'
     });
     
@@ -173,21 +179,17 @@ const authenticateToken = (req, res, next) => {
 
 
 
-
+  //  // Verify that tags is an array and is not empty
+  //  if (!Array.isArray(tags) || tags.length === 0) {
+  //   return res.status(400).send({ error: "Tags are required and must be provided as an array." });
+  // }
 
 /**************************************************** POSTS ************************************************************/
 // UPLOAD POSTS -------------------------------------------------------------------------------------------------------------
 app.post('/posts', upload.array('imageUrls'), async (req, res) => {
-  const { title, content, tags } = req.body;
-  const author = req.user.userId;
+  const { title, content, author } = req.body;
 
   let imageBase64Strings = [];
-  
-   // Verify that tags is an array and is not empty
-   if (!Array.isArray(tags) || tags.length === 0) {
-    return res.status(400).send({ error: "Tags are required and must be provided as an array." });
-  }
-
 
   // Convert each uploaded image to base64
   if (req.files && req.files.length > 0) {
@@ -209,9 +211,8 @@ app.post('/posts', upload.array('imageUrls'), async (req, res) => {
       const newPost = new Post({
           title,
           content,
-          author,
+          author, // user object (being sent as userId from frontend)
           imageUrls: imageBase64Strings, // Now storing base64 strings
-          tags
       });
 
       await newPost.save();

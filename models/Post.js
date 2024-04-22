@@ -21,7 +21,7 @@ const postSchema = new mongoose.Schema({
         enum: ['Science Fiction', 'Fantasy', 'Gaming', 'Anime', 'Cartoon', 'Fanfiction', 
         'Horror', 'Biography', 'Thriller', 'Minimalism', 'Expressionsim', 'Impressionism', 
         'Pop Art', 'Renaissance', 'Abstract', 'Modern', 'Romance', 'Adventure', 'History', 'Technology', 'Futurism'],
-        required: true
+        required: false
     }],
      },  
     {timestamps: true }); // Mongoose manages createdAt and updatedAt fields automatically
