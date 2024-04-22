@@ -177,10 +177,23 @@ const authenticateToken = (req, res, next) => {
 
 /**************************************************** POSTS ************************************************************/
 // UPLOAD POSTS -------------------------------------------------------------------------------------------------------------
+<<<<<<< HEAD
 app.post('/posts', upload.array('imageUrls'), async (req, res) => {
   const { title, content, author } = req.body;
 
+=======
+// INCOMPLETE! NEED A WAY TO STORE AND REFRESH TOKEN SO AS TO NOT END A USER'S SESSION
+app.post('/posts', authenticateToken, upload.array('imageUrls'), async (req, res) => {
+  const { title, content, tags } = req.body;
+  const author = req.user.userId;
+>>>>>>> 30a37aafc37b1fc4db748b13f97424303ec2bcf1
   let imageBase64Strings = [];
+  
+   // Verify that tags is an array and is not empty
+   if (!Array.isArray(tags) || tags.length === 0) {
+    return res.status(400).send({ error: "Tags are required and must be provided as an array." });
+  }
+
 
   // Convert each uploaded image to base64
   if (req.files && req.files.length > 0) {
@@ -203,7 +216,8 @@ app.post('/posts', upload.array('imageUrls'), async (req, res) => {
           title,
           content,
           author,
-          imageUrls: imageBase64Strings // Now storing base64 strings
+          imageUrls: imageBase64Strings, // Now storing base64 strings
+          tags
       });
 
       await newPost.save();
