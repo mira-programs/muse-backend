@@ -109,6 +109,7 @@ app.post('/login', async (req, res) => {
     const token = jwt.sign({ userId: user._id }, jwtSecretKey, { expiresIn: '1h' });
     res.json({
       token: token,
+      email: user.email,
       message: 'Login successful. Redirecting to homepage...'
     });
     
@@ -176,10 +177,9 @@ const authenticateToken = (req, res, next) => {
 
 /**************************************************** POSTS ************************************************************/
 // UPLOAD POSTS -------------------------------------------------------------------------------------------------------------
-// INCOMPLETE! NEED A WAY TO STORE AND REFRESH TOKEN SO AS TO NOT END A USER'S SESSION
-app.post('/posts', authenticateToken, upload.array('imageUrls'), async (req, res) => {
-  const { title, content } = req.body;
-  const author = req.user.userId;
+app.post('/posts', upload.array('imageUrls'), async (req, res) => {
+  const { title, content, author } = req.body;
+
   let imageBase64Strings = [];
 
   // Convert each uploaded image to base64
