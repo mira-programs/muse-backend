@@ -107,13 +107,6 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Please verify your email before logging in.' });
     }
 
-    // const token = jwt.sign({ userId: user._id }, jwtSecretKey, { expiresIn: '1h' });
-    // res.json({
-    //   token: token,
-    //   email: user.email,
-    //   message: 'Login successful. Redirecting to homepage...'
-    // });
-
     res.json({
       userId: user._id,  // ensure this is the actual ID from MongoDB
       message: 'Login successful. Redirecting to homepage...'
@@ -178,6 +171,8 @@ const authenticateToken = (req, res, next) => {
 };
 
 
+
+app.use('/uploads', express.static('uploads'));
 
   //  // Verify that tags is an array and is not empty
   //  if (!Array.isArray(tags) || tags.length === 0) {
@@ -315,7 +310,7 @@ app.get('/chats/:userId', authenticateToken, (req, res) => {
 });
 
 
-// STORE MESSAGES -----------------------------------------------------------------------------------------------------------
+// SEND MESSAGES -----------------------------------------------------------------------------------------------------------
 // stores message by message in database
 app.post('/chats/:userId', authenticateToken,  (req, res) => {
   console.log("Body:", req.body); // This will log the body content
@@ -456,8 +451,6 @@ app.delete('/posts/:id', async (req, res) => {
   }
 });
 
-// end
-app.use('/uploads', express.static('uploads'));
 module.exports = router;
 
 app.listen(PORT, () => {
