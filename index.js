@@ -265,6 +265,37 @@ app.get('/user-posts/:userId', async (req, res) => {
 
 
 
+// DELETE USER'S POSTS ------------------------------------------------------------------------------------------------------
+app.delete('/posts/:id', async (req, res) => {
+  const userId = req.headers.id;  // Fetching user email from headers
+  const adminEmail = "musecollaborate@gmail.com";
+
+  try {
+      const post = await Post.findById(req.params.id).populate('author');
+      if (!post) {
+          return res.status(404).send('Post not found');
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).send('User not found');
+      }
+
+
+      if (user.email === adminEmail || post.author.id.equals(userId)) {
+          await Post.deleteOne({ _id: req.params.id });
+          return res.send('Post deleted successfully');
+      } else {
+          return res.status(403).send('Unauthorized to delete this post');
+      }
+  } catch (error) {
+      console.error('Error:', error);
+      res.status(500).send('Server error');
+  }
+});
+
+
+
 
 
 /**************************************************** HOMEPAGE ************************************************************/
@@ -302,6 +333,7 @@ app.get('/search', async (req, res) => {
       res.status(500).json({ error: 'Server error', message: error.message });
   }
 });
+
 
 // DISPLAY POSTS ON HOMEPAGE ------------------------------------------------------------------------------------------------
 app.get('/posts', async (req, res) => {
@@ -449,33 +481,7 @@ app.post('/profile', upload.single('profilePicture'), async (req, res) => {
 });
 
 
-app.delete('/posts/:id', async (req, res) => {
-  const userId = req.headers.id;  // Fetching user email from headers
-  const adminEmail = "musecollaborate@gmail.com";
 
-  try {
-      const post = await Post.findById(req.params.id).populate('author');
-      if (!post) {
-          return res.status(404).send('Post not found');
-      }
-
-      const user = await User.findById(userId);
-      if (!user) {
-          return res.status(404).send('User not found');
-      }
-
-
-      if (user.email === adminEmail || post.author.id.equals(userId)) {
-          await Post.deleteOne({ _id: req.params.id });
-          return res.send('Post deleted successfully');
-      } else {
-          return res.status(403).send('Unauthorized to delete this post');
-      }
-  } catch (error) {
-      console.error('Error:', error);
-      res.status(500).send('Server error');
-  }
-});
 
 
 /**************************************************** REPORTS ************************************************************/
