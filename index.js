@@ -15,6 +15,7 @@ const Post = require('./models/Post');
 const Message = require('./models/Message'); 
 const fs = require('fs');
 const dir = './uploads';
+const Report = require('./models/Report');
 
 app.use(express.json());
 app.use(cors());
@@ -512,6 +513,40 @@ app.get('/posts/:postId/comments', async (req, res) => {
       res.status(500).json({ message: error.message });
   }
 });
+
+app.post('/report', async (req, res) => {
+  const { reporterId, reportedId, reason } = req.body;
+  
+  if (!reporterId || !reportedId || !reason) {
+      return res.status(400).send({ message: 'All fields are required.' });
+  }
+
+  try {
+      const report = new Report({
+          reporter: reporterId,
+          reported: reportedId,
+          reason: reason
+      });
+      await report.save();
+      res.status(201).send({ message: 'Report has been filed.' });
+  } catch (error) {
+      res.status(500).send({ message: 'Failed to create report', error: error.message });
+  }
+});
+
+// Route to fetch reports with user details
+app.get('/report', async (req, res) => {
+  try {
+      const reports = await Report.find()
+          .sort({ timestamp: -1 })
+          .populate('reporter', 'username')  // Populating the username of the reporter
+          .populate('reported', 'username'); // Populating the username of the reported
+      res.status(200).json(reports);
+  } catch (error) {
+      res.status(500).send({ message: 'Failed to fetch reports', error: error.message });
+  }
+});
+
 
 
 module.exports = router;
