@@ -218,6 +218,37 @@ app.post('/posts', upload.array('imageUrls'), async (req, res) => {
 });
 
 
+// ADD TO THE ARRAY OF COMMENTS UNDER POST WITH POST ID
+app.post('/posts/:postId/comments', async (req, res) => {
+  const { body, commenter } = req.body; // Comment body and commenter ID from the client
+  const newComment = {
+      body: body,
+      commenter: commenter
+  };
+  try {
+      const post = await Post.findByIdAndUpdate(req.params.postId, { $push: { comments: newComment } }, { new: true }).populate('comments.commenter');
+      res.status(201).json(post.comments);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+
+// GETS ALL COMMENTS UNDER 1 POST USING POSTID
+app.get('/posts/:postId/comments', async (req, res) => {
+  try {
+      const post = await Post.findById(req.params.postId).populate('comments.commenter', 'username email');
+      if (post) {
+          res.status(200).json(post.comments); //json array
+      } else {
+          res.status(404).send('Post not found');
+      }
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+
 // DISPLAY USER'S POSTS ------------------------------------------------------------------------------------------------------
 // test on postman: localhost:8080/user-posts/user id
 //gets all the posts of your user 
@@ -272,14 +303,17 @@ app.get('/search', async (req, res) => {
   }
 });
 
-// DISPLAY 10 POSTS ON HOMEPAGE ------------------------------------------------------------------------------------------------
-// Endpoint to get the 10 most recent posts
-app.get('/recent-posts', async (req, res) => {
+// DISPLAY POSTS ON HOMEPAGE ------------------------------------------------------------------------------------------------
+app.get('/posts', async (req, res) => {
   try {
       const posts = await Post.find({})
-                              .sort({ createdAt: -1 }) // Sort by createdAt timestamp, descending
-                              .limit(10); // Limit to 10 posts
-      res.json(posts.map(post => ({ postId: post._id, title: post.title }))); // Simplified response for clarity
+                              .sort({ createdAt: -1 }); 
+      res.json(posts.map(post => ({ postID: post._id, 
+                                    Image: post.imageUrls, 
+                                    tags: post.tags, 
+                                    muserID: post.author, 
+                                    title: post.title, 
+                                    des: post.content })));
   } catch (error) {
       res.status(500).send('Error retrieving posts: ' + error.message);
   }
@@ -451,32 +485,6 @@ app.delete('/posts/:id', async (req, res) => {
   }
 });
 
-app.post('/posts/:postId/comments', async (req, res) => {
-  const { body, commenter } = req.body; // Comment body and commenter ID from the client
-  const newComment = {
-      body: body,
-      commenter: commenter
-  };
-  try {
-      const post = await Post.findByIdAndUpdate(req.params.postId, { $push: { comments: newComment } }, { new: true }).populate('comments.commenter');
-      res.status(201).json(post.comments);
-  } catch (error) {
-      res.status(500).json({ message: error.message });
-  }
-});
-
-app.get('/posts/:postId/comments', async (req, res) => {
-  try {
-      const post = await Post.findById(req.params.postId).populate('comments.commenter', 'username email');
-      if (post) {
-          res.status(200).json(post.comments);
-      } else {
-          res.status(404).send('Post not found');
-      }
-  } catch (error) {
-      res.status(500).json({ message: error.message });
-  }
-});
 
 
 module.exports = router;

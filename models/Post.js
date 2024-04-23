@@ -16,15 +16,21 @@ const postSchema = new mongoose.Schema({
         required: true
     },
     imageUrls: [String], // Optional
-    tags: [{
-        type: String,
-        enum: ['Science Fiction', 'Fantasy', 'Gaming', 'Anime', 'Cartoon', 'Fanfiction', 
-        'Horror', 'Biography', 'Thriller', 'Minimalism', 'Expressionsim', 'Impressionism', 
-        'Pop Art', 'Renaissance', 'Abstract', 'Modern', 'Romance', 'Adventure', 'History', 'Technology', 'Futurism'],
-        required: false
-    }],
+    tags: {
+        type: [{
+            type: String,
+            enum: ['Science Fiction', 'Fantasy', 'Gaming', 'Anime', 'Cartoon', 'Fanfiction', 
+                   'Horror', 'Biography', 'Thriller', 'Minimalism', 'Expressionism', 'Impressionism', 
+                   'Pop Art', 'Renaissance', 'Abstract', 'Modern', 'Romance', 'Adventure', 'History', 'Technology', 'Futurism']
+        }],
+        validate: [arrayLimit, 'Please add at least one tag']
+    },
      },  
     {timestamps: true }); // Mongoose manages createdAt and updatedAt fields automatically
+
+    function arrayLimit(val) {
+        return val.length > 0;
+      }
 
 const Post = mongoose.model('Post', postSchema);
 module.exports = Post;
