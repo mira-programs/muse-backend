@@ -520,7 +520,38 @@ app.get('/report', async (req, res) => {
   }
 });
 
+app.delete('/delete-user/:id', async (req, res) => {
+  const userid = req.params.id; // ID of the user to delete
+  const adminId = req.headers.userId; // Admin ID sent from the frontend
 
+  const adminEmail = "musecollaborate@gmail.com";
+  
+  try {
+    // First, verify the admin user
+    const adminUser = await User.findById(adminId);
+    if (adminUser.email !== adminEmail) {
+      res.status(403).send("Access denied. Only specific admins can perform this action.");
+      return;
+    }
+
+    // If verification is successful, proceed to delete the specified user
+    const user = await User.findById(userid);
+    if (!user) {
+      res.status(404).send("User not found.");
+      return;
+    }
+
+    const deletedUser = await User.findByIdAndDelete(userid);
+    if (deletedUser) {
+      res.send("User deleted successfully.");
+    } else {
+      res.status(404).send("User not found.");
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Error processing your request.");
+  }
+});
 
 module.exports = router;
 
