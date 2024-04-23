@@ -15,6 +15,7 @@ const Post = require('./models/Post');
 const Message = require('./models/Message'); 
 const fs = require('fs');
 const dir = './uploads';
+const Report = require('./models/Report');
 
 app.use(express.json());
 app.use(cors());
@@ -334,14 +335,48 @@ app.get('/posts', async (req, res) => {
 /**************************************************** MESSAGES ************************************************************/
 // GET MESSAGES ------------------------------------------------------------------------------------------------------------
 // Get the receiver's messages
-app.get('/chats/:userId', authenticateToken, (req, res) => {
-  Message.find({ receiver: req.user.userId })
+// app.get('/chats/:userId', authenticateToken, (req, res) => {
+//   Message.find({ receiver: req.user.userId })
+//          .sort({ timestamp: -1 })
+//          .limit(50)
+//          .populate('sender receiver')
+//          .then(messages => res.json(messages))
+//          .catch(err => res.status(500).json({ message: 'Error fetching messages', error: err }));
+// });
+
+
+// // STORE MESSAGES -----------------------------------------------------------------------------------------------------------
+// // stores message by message in database
+// app.post('/chats/:userId', authenticateToken,  (req, res) => {
+//   console.log("Body:", req.body); // This will log the body content
+
+//   const { receiver, message } = req.body;
+//   if (!receiver) {
+//     return res.status(400).json({ message: "Receiver not defined" });
+//   }
+
+//   const newMessage = new Message({
+//       sender: req.user.userId,
+//       receiver,
+//       message
+//   });
+
+//   newMessage.save()
+//       .then(() => res.status(201).json({ message: 'Message sent successfully', data: newMessage }))
+//       .catch(err => res.status(500).json({ message: 'Error sending message', error: err }));
+// });
+
+app.get('/chats', (req, res) => {
+  const userId = req.body.userId; // Extract user ID from request body
+  Message.find({ receiver: userId })
          .sort({ timestamp: -1 })
          .limit(50)
          .populate('sender receiver')
          .then(messages => res.json(messages))
          .catch(err => res.status(500).json({ message: 'Error fetching messages', error: err }));
 });
+
+
 
 
 // SEND MESSAGES -----------------------------------------------------------------------------------------------------------
