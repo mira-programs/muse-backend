@@ -456,6 +456,34 @@ app.delete('/posts/:id', async (req, res) => {
   }
 });
 
+app.post('/posts/:postId/comments', async (req, res) => {
+  const { body, commenter } = req.body; // Comment body and commenter ID from the client
+  const newComment = {
+      body: body,
+      commenter: commenter
+  };
+  try {
+      const post = await Post.findByIdAndUpdate(req.params.postId, { $push: { comments: newComment } }, { new: true }).populate('comments.commenter');
+      res.status(201).json(post.comments);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/posts/:postId/comments', async (req, res) => {
+  try {
+      const post = await Post.findById(req.params.postId).populate('comments.commenter', 'username email');
+      if (post) {
+          res.status(200).json(post.comments);
+      } else {
+          res.status(404).send('Post not found');
+      }
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+
 // end
 app.use('/uploads', express.static('uploads'));
 module.exports = router;
