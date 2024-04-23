@@ -305,8 +305,40 @@ app.get('/recent-posts', async (req, res) => {
 /**************************************************** MESSAGES ************************************************************/
 // GET MESSAGES ------------------------------------------------------------------------------------------------------------
 // Get the receiver's messages
-app.get('/chats/:userId', authenticateToken, (req, res) => {
-  Message.find({ receiver: req.user.userId })
+// app.get('/chats/:userId', authenticateToken, (req, res) => {
+//   Message.find({ receiver: req.user.userId })
+//          .sort({ timestamp: -1 })
+//          .limit(50)
+//          .populate('sender receiver')
+//          .then(messages => res.json(messages))
+//          .catch(err => res.status(500).json({ message: 'Error fetching messages', error: err }));
+// });
+
+
+// // STORE MESSAGES -----------------------------------------------------------------------------------------------------------
+// // stores message by message in database
+// app.post('/chats/:userId', authenticateToken,  (req, res) => {
+//   console.log("Body:", req.body); // This will log the body content
+
+//   const { receiver, message } = req.body;
+//   if (!receiver) {
+//     return res.status(400).json({ message: "Receiver not defined" });
+//   }
+
+//   const newMessage = new Message({
+//       sender: req.user.userId,
+//       receiver,
+//       message
+//   });
+
+//   newMessage.save()
+//       .then(() => res.status(201).json({ message: 'Message sent successfully', data: newMessage }))
+//       .catch(err => res.status(500).json({ message: 'Error sending message', error: err }));
+// });
+
+app.get('/chats', (req, res) => {
+  const userId = req.body.userId; // Extract user ID from request body
+  Message.find({ receiver: userId })
          .sort({ timestamp: -1 })
          .limit(50)
          .populate('sender receiver')
@@ -315,18 +347,20 @@ app.get('/chats/:userId', authenticateToken, (req, res) => {
 });
 
 
+
+
 // STORE MESSAGES -----------------------------------------------------------------------------------------------------------
 // stores message by message in database
-app.post('/chats/:userId', authenticateToken,  (req, res) => {
+app.post('/chats', (req, res) => {
   console.log("Body:", req.body); // This will log the body content
 
-  const { receiver, message } = req.body;
-  if (!receiver) {
-    return res.status(400).json({ message: "Receiver not defined" });
+  const { receiver, message, userId } = req.body; // Extract user ID from request body
+  if (!userId || !receiver) {
+    return res.status(400).json({ message: "User ID or receiver not defined" });
   }
 
   const newMessage = new Message({
-      sender: req.user.userId,
+      sender: userId, // Use the extracted user ID as the sender
       receiver,
       message
   });
@@ -337,8 +371,9 @@ app.post('/chats/:userId', authenticateToken,  (req, res) => {
 });
 
 
+
 // Get chat list: all users a person has messaged or received messages from
-app.get('/chats', authenticateToken, async (req, res) => {
+app.get('/chat-list', authenticateToken, async (req, res) => {
   // const userId = req.user.userId;  // Set by your authenticateToken middleware
   const userId = new mongoose.Types.ObjectId(req.user.userId);  // Convert string ID to ObjectId
    try {
