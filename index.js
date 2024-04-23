@@ -144,7 +144,6 @@ app.get('/verify-email', async (req, res) => {
 
 
 
-
 /*************************************************** TOKEN ************************************************************/
 const authenticateToken = (req, res, next) => {
     console.log("Authorization Header:", req.headers['authorization']);  // Log the full Authorization header
@@ -336,7 +335,6 @@ app.get('/chats', (req, res) => {
 
 
 
-
 // SEND MESSAGES -----------------------------------------------------------------------------------------------------------
 // stores message by message in database
 app.post('/chats', (req, res) => {
@@ -361,54 +359,54 @@ app.post('/chats', (req, res) => {
 
 
 // Get chat list: all users a person has messaged or received messages from
-app.get('/chat-list', authenticateToken, async (req, res) => {
-  // const userId = req.user.userId;  // Set by your authenticateToken middleware
-  const userId = new mongoose.Types.ObjectId(req.user.userId);  // Convert string ID to ObjectId
-   try {
-     const chatUsers = await Message.aggregate([
-       {
-         $match: {
-           $or: [{ sender: userId }, { receiver: userId }]
-         }
-       },
-       {
-         $group: {
-           _id: null,
-           users: { $addToSet: "$sender", $addToSet: "$receiver" }
-         }
-       },
-       {
-         $project: {
-           users: 1,
-           _id: 0
-         }
-       },
-       { $unwind: "$users" }, // Flatten the users array
-       { $match: { users: { $ne: userId } } }, // Exclude the current user's id
-       {
-         $lookup: {
-           from: "users", // Assuming 'users' is your collection name for User documents
-           localField: "users",
-           foreignField: "_id",
-           as: "userDetails"
-         }
-       },
-       { $unwind: "$userDetails" },
-       {
-         $project: { // Adjust fields according to your User model
-           userId: "$userDetails._id",
-           username: "$userDetails.username",
-           email: "$userDetails.email"
-         }
-       }
-     ]);
+// app.get('/chat-list', authenticateToken, async (req, res) => {
+//   // const userId = req.user.userId;  // Set by your authenticateToken middleware
+//   const userId = new mongoose.Types.ObjectId(req.user.userId);  // Convert string ID to ObjectId
+//    try {
+//      const chatUsers = await Message.aggregate([
+//        {
+//          $match: {
+//            $or: [{ sender: userId }, { receiver: userId }]
+//          }
+//        },
+//        {
+//          $group: {
+//            _id: null,
+//            users: { $addToSet: "$sender", $addToSet: "$receiver" }
+//          }
+//        },
+//        {
+//          $project: {
+//            users: 1,
+//            _id: 0
+//          }
+//        },
+//        { $unwind: "$users" }, // Flatten the users array
+//        { $match: { users: { $ne: userId } } }, // Exclude the current user's id
+//        {
+//          $lookup: {
+//            from: "users", // Assuming 'users' is your collection name for User documents
+//            localField: "users",
+//            foreignField: "_id",
+//            as: "userDetails"
+//          }
+//        },
+//        { $unwind: "$userDetails" },
+//        {
+//          $project: { // Adjust fields according to your User model
+//            userId: "$userDetails._id",
+//            username: "$userDetails.username",
+//            email: "$userDetails.email"
+//          }
+//        }
+//      ]);
  
-     res.json({ chatList: chatUsers });
-   } catch (error) {
-     console.error("Failed to retrieve chat list:", error);
-     res.status(500).send("Server error while retrieving chat list");
-   }
- });
+//      res.json({ chatList: chatUsers });
+//    } catch (error) {
+//      console.error("Failed to retrieve chat list:", error);
+//      res.status(500).send("Server error while retrieving chat list");
+//    }
+//  });
 
 
 
@@ -480,6 +478,8 @@ app.delete('/posts/:id', async (req, res) => {
 });
 
 
+/**************************************************** REPORTS ************************************************************/
+// report a user ---------------------------------------------------------------------------------------------------------------
 app.post('/report', async (req, res) => {
   const { reporterId, reportedId, reason } = req.body;
   
@@ -500,7 +500,8 @@ app.post('/report', async (req, res) => {
   }
 });
 
-// Route to fetch reports with user details
+
+// Route to fetch reports with user details ----------------------------------------------------------------------------------
 app.get('/report', async (req, res) => {
   try {
       const reports = await Report.find()
