@@ -290,7 +290,7 @@ app.get('/search', async (req, res) => {
           }
           res.json(posts);
       } else if (type === 'username') {
-          const users = await User.find({ username: new RegExp('^' + query, 'i') }, 'username _id');
+          const users = await User.find({ username: new RegExp('^' + query, 'i') }); // find user based on username
           if (users.length === 0) {
               return res.status(404).json({ error: 'No users found with the specified username' });
           }
@@ -320,52 +320,10 @@ app.get('/posts', async (req, res) => {
   }
 });
 
-// to be added in the front endas the code correspongin to this backend segment
-/*setInterval(() => {
-    fetch('http://localhost:3000/recent-posts')
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error('Error fetching posts:', error));
-}, 60000); */
-
-
-
 
 
 /**************************************************** MESSAGES ************************************************************/
 // GET MESSAGES ------------------------------------------------------------------------------------------------------------
-// Get the receiver's messages
-// app.get('/chats/:userId', authenticateToken, (req, res) => {
-//   Message.find({ receiver: req.user.userId })
-//          .sort({ timestamp: -1 })
-//          .limit(50)
-//          .populate('sender receiver')
-//          .then(messages => res.json(messages))
-//          .catch(err => res.status(500).json({ message: 'Error fetching messages', error: err }));
-// });
-
-
-// // STORE MESSAGES -----------------------------------------------------------------------------------------------------------
-// // stores message by message in database
-// app.post('/chats/:userId', authenticateToken,  (req, res) => {
-//   console.log("Body:", req.body); // This will log the body content
-
-//   const { receiver, message } = req.body;
-//   if (!receiver) {
-//     return res.status(400).json({ message: "Receiver not defined" });
-//   }
-
-//   const newMessage = new Message({
-//       sender: req.user.userId,
-//       receiver,
-//       message
-//   });
-
-//   newMessage.save()
-//       .then(() => res.status(201).json({ message: 'Message sent successfully', data: newMessage }))
-//       .catch(err => res.status(500).json({ message: 'Error sending message', error: err }));
-// });
-
 app.get('/chats', (req, res) => {
   const userId = req.body.userId; // Extract user ID from request body
   Message.find({ receiver: userId })
@@ -381,16 +339,16 @@ app.get('/chats', (req, res) => {
 
 // SEND MESSAGES -----------------------------------------------------------------------------------------------------------
 // stores message by message in database
-app.post('/chats/:userId', authenticateToken,  (req, res) => {
+app.post('/chats', (req, res) => {
   console.log("Body:", req.body); // This will log the body content
 
-  const { receiver, message } = req.body;
-  if (!receiver) {
-    return res.status(400).json({ message: "Receiver not defined" });
+  const { receiver, message, userId } = req.body; // Extract user ID from request body
+  if (!userId || !receiver) {
+    return res.status(400).json({ message: "User ID or receiver not defined" });
   }
 
   const newMessage = new Message({
-      sender: req.user.userId,
+      sender: userId, // Use the extracted user ID as the sender
       receiver,
       message
   });
@@ -401,8 +359,9 @@ app.post('/chats/:userId', authenticateToken,  (req, res) => {
 });
 
 
+
 // Get chat list: all users a person has messaged or received messages from
-app.get('/chats', authenticateToken, async (req, res) => {
+app.get('/chat-list', authenticateToken, async (req, res) => {
   // const userId = req.user.userId;  // Set by your authenticateToken middleware
   const userId = new mongoose.Types.ObjectId(req.user.userId);  // Convert string ID to ObjectId
    try {
@@ -517,6 +476,40 @@ app.delete('/posts/:id', async (req, res) => {
   } catch (error) {
       console.error('Error:', error);
       res.status(500).send('Server error');
+  }
+});
+
+
+app.post('/report', async (req, res) => {
+  const { reporterId, reportedId, reason } = req.body;
+  
+  if (!reporterId || !reportedId || !reason) {
+      return res.status(400).send({ message: 'All fields are required.' });
+  }
+
+  try {
+      const report = new Report({
+          reporter: reporterId,
+          reported: reportedId,
+          reason: reason
+      });
+      await report.save();
+      res.status(201).send({ message: 'Report has been filed.' });
+  } catch (error) {
+      res.status(500).send({ message: 'Failed to create report', error: error.message });
+  }
+});
+
+// Route to fetch reports with user details
+app.get('/report', async (req, res) => {
+  try {
+      const reports = await Report.find()
+          .sort({ timestamp: -1 })
+          .populate('reporter', 'username')  // Populating the username of the reporter
+          .populate('reported', 'username'); // Populating the username of the reported
+      res.status(200).json(reports);
+  } catch (error) {
+      res.status(500).send({ message: 'Failed to fetch reports', error: error.message });
   }
 });
 
