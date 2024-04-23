@@ -23,6 +23,12 @@ const postSchema = new mongoose.Schema({
         'Pop Art', 'Renaissance', 'Abstract', 'Modern', 'Romance', 'Adventure', 'History', 'Technology', 'Futurism'],
         required: false
     }],
+    comments: [ 
+        { // Directly defining comments within the Post schema
+        body: { type: String, required: true },
+        commenter: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        createdAt: { type: Date, default: Date.now } }
+    ]
      },  
     {timestamps: true }); // Mongoose manages createdAt and updatedAt fields automatically
 

@@ -503,7 +503,8 @@ app.post('/posts/:postId/comments', async (req, res) => {
 
 app.get('/posts/:postId/comments', async (req, res) => {
   try {
-      const post = await Post.findById(req.params.postId).populate('comments.commenter', 'username email');
+      const post = await Post.findById(req.params.postId).populate('comments.commenter', 'username email').sort({ 'comments.createdAt': 'desc' });;
+
       if (post) {
           res.status(200).json(post.comments);
       } else {
