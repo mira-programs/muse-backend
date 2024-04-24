@@ -183,37 +183,59 @@ app.use('/uploads', express.static('uploads'));
 // UPLOAD POSTS -------------------------------------------------------------------------------------------------------------
 app.post('/posts', upload.array('imageUrls'), async (req, res) => {
   const { title, content, author } = req.body;
+  console.log('Received tags:', req.body.tags);
+  console.log('Received title:', title);
+  console.log('Received content:', content);
+  console.log('Received author:', author);
+  console.log('Received files:', req.files);
+
+  let tags;
+  try {
+    if (req.body.tags) {
+      tags = JSON.parse(req.body.tags);
+      console.log('Parsed tags:', tags);
+    }
+  } catch (error) {
+    console.error('Error parsing tags:', error);
+    return res.status(400).send({ message: "Invalid tags format", error: error.toString() });
+  }
 
   let imageBase64Strings = [];
-
-  // Convert each uploaded image to base64
-  if (req.files && req.files.length > 0) {
-      imageBase64Strings = await Promise.all(req.files.map(file => {
-          return new Promise((resolve, reject) => {
-              fs.readFile(file.path, (err, data) => {
-                  if (err) reject(err);
-                  // Convert image file to base64 string
-                  const base64Image = Buffer.from(data).toString('base64');
-                  resolve(base64Image);
-              });
-          });
-      }));
-      // Optionally, delete the files after converting them if they are no longer needed
-      req.files.forEach(file => fs.unlinkSync(file.path));
+  try {
+    if (req.files && req.files.length > 0) {
+        imageBase64Strings = await Promise.all(req.files.map(file => {
+            return new Promise((resolve, reject) => {
+                fs.readFile(file.path, (err, data) => {
+                    if (err) {
+                        console.error('Error reading file:', err);
+                        reject(err);
+                    } else {
+                        const base64Image = Buffer.from(data).toString('base64');
+                        resolve(base64Image);
+                    }
+                });
+            });
+        }));
+        req.files.forEach(file => fs.unlinkSync(file.path));
+    }
+  } catch (error) {
+    console.error('Error processing images:', error);
+    return res.status(500).send({ message: "Error processing images", error: error.toString() });
   }
 
   try {
       const newPost = new Post({
           title,
           content,
-          author, // user object (being sent as userId from frontend)
-          imageUrls: imageBase64Strings, // Now storing base64 strings
+          author,
+          imageUrls: imageBase64Strings,
+          tags
       });
-
       await newPost.save();
       res.status(201).send(newPost);
   } catch (error) {
-      res.status(400).send(error);
+      console.error('Error saving new post:', error);
+      res.status(400).send({ message: "Failed to save the post", error: error.message, details: error.errors });
   }
 });
 

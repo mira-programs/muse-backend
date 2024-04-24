@@ -16,15 +16,12 @@ const postSchema = new mongoose.Schema({
         required: true
     },
     imageUrls: [String], // Optional
-    tags: {
-        type: [{
-            type: String,
-            enum: ['Science Fiction', 'Fantasy', 'Gaming', 'Anime', 'Cartoon', 'Fanfiction', 
-                   'Horror', 'Biography', 'Thriller', 'Minimalism', 'Expressionism', 'Impressionism', 
-                   'Pop Art', 'Renaissance', 'Abstract', 'Modern', 'Romance', 'Adventure', 'History', 'Technology', 'Futurism']
-        }],
-        validate: [arrayLimit, 'Please add at least one tag']
-    },
+    tags: [{
+        type: String,
+        enum: ['Science Fiction', 'Fantasy', 'Gaming', 'Anime', 'Cartoon', 'Fanfiction', 
+               'Horror', 'Biography', 'Thriller', 'Minimalism', 'Expressionism', 'Impressionism', 
+               'Pop Art', 'Renaissance', 'Abstract', 'Modern', 'Romance', 'Adventure', 'History', 'Technology', 'Futurism']
+    }],
     comments: [ 
         { // Directly defining comments within the Post schema
         body: { type: String, required: true },
