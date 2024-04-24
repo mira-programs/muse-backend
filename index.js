@@ -530,19 +530,78 @@ app.post('/report', async (req, res) => {
 
 
 // Route to fetch reports with user details ----------------------------------------------------------------------------------
+// app.get('/report', async (req, res) => {
+//   try {
+//       const reports = await Report.find()
+//           .sort({ timestamp: -1 })
+//           .populate('reporter', 'username')  // Populating the username of the reporter
+//           .populate('reported', 'username'); // Populating the username of the reported
+//       res.status(200).json(reports);
+//   } catch (error) {
+//       res.status(500).send({ message: 'Failed to fetch reports', error: error.message });
+//   }
+// });
+
 app.get('/report', async (req, res) => {
+  const adminId =req.headers.userId; // Admin ID sent from the frontend
+  const adminEmail = "musecollaborate@gmail.com";
+  
   try {
+      // First, verify the admin user
+      const adminUser = await User.findById(adminId);
+      if (!adminUser || adminUser.email !== adminEmail) {
+          res.status(403).send("Access denied. Only specific admins can perform this action.");
+          return;
+      }
+
+      // If admin verification is successful, proceed to fetch reports
       const reports = await Report.find()
           .sort({ timestamp: -1 })
           .populate('reporter', 'username')  // Populating the username of the reporter
           .populate('reported', 'username'); // Populating the username of the reported
       res.status(200).json(reports);
   } catch (error) {
+      if (error.kind === 'ObjectId' && error.path === '_id') {
+          res.status(400).send({ message: 'Invalid admin ID format', error: error.message });
+          return;
+      }
       res.status(500).send({ message: 'Failed to fetch reports', error: error.message });
   }
 });
 
 
+app.delete('/delete-user/:id', async (req, res) => {
+  const userid = req.params.id; // ID of the user to delete
+  const adminId = req.headers.userId; // Admin ID sent from the frontend
+
+  const adminEmail = "musecollaborate@gmail.com";
+  
+  try {
+    // First, verify the admin user
+    const adminUser = await User.findById(adminId);
+    if (!adminUser || adminUser.email !== adminEmail) {
+      res.status(403).send("Access denied. Only specific admins can perform this action.");
+      return;
+    }
+
+    // If verification is successful, proceed to delete the specified user
+    const user = await User.findById(userid);
+    if (!user) {
+      res.status(404).send("User not found.");
+      return;
+    }
+
+    const deletedUser = await User.findByIdAndDelete(userid);
+    if (deletedUser) {
+      res.send("User deleted successfully.");
+    } else {
+      res.status(404).send("User not found.");
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Error processing your request.");
+  }
+});
 
 module.exports = router;
 
