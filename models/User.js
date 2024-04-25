@@ -25,12 +25,6 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        unique: true
-    },
-    username: {
-        type: String,
-        required: true,
-        unique: true // Ensures usernames are unique across the database
     },
 
     emailVerified: {
@@ -41,6 +35,12 @@ const userSchema = new mongoose.Schema({
 
     temporaryVerificationCode: {
         type: String,
+        required: false
+    },
+
+    profile: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Profile',
         required: false
     }
 });

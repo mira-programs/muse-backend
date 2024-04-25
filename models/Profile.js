@@ -2,29 +2,36 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const profileSchema = new Schema({
-    userId: {
-        type:String,
-        required: true
+    userId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User', 
+        required: true 
     },
     profilePicture: { 
         type: String, 
-        required: false },
+        required: false 
+    },
     firstName: { 
         type: String, 
-        required: false },
+        required: true 
+    },
     lastName: { 
         type: String, 
-        required: false },
+        required: true 
+    },
     location: { 
         type: String, 
-        required: false },
+        required: false 
+    },
     about: { 
         type: String, 
-        required: false },
+        required: false 
+    },
     isOpenToCollaborate: { 
         type: Boolean, 
         required: false, 
-        default: false },
+        default: false 
+    },
     experiences: [{
         title: { type: String, required: false },
         company: { type: String, required: false },
