@@ -378,7 +378,7 @@ app.get('/posts', async (req, res) => {
 /**************************************************** MESSAGES ************************************************************/
 // GET MESSAGES ------------------------------------------------------------------------------------------------------------
 app.get('/chats', (req, res) => {
-  const userId = req.body.userId; // Extract user ID from request body
+  const userId = req.query.userId; // Extract user ID from request body
   Message.find({ receiver: userId })
          .sort({ timestamp: -1 })
          .limit(50)
@@ -393,8 +393,9 @@ app.get('/chats', (req, res) => {
 // stores message by message in database
 app.post('/chats', (req, res) => {
   console.log("Body:", req.body); // This will log the body content
+  const userId =req.query.userId;
 
-  const { receiver, message, userId } = req.body; // Extract user ID from request body
+  const { receiver, message} = req.body; // Extract user ID from request body
   if (!userId || !receiver) {
     return res.status(400).json({ message: "User ID or receiver not defined" });
   }
@@ -412,10 +413,10 @@ app.post('/chats', (req, res) => {
 
 
 
-// Get chat list: all users a person has messaged or received messages from
+//Get chat list: all users a person has messaged or received messages from
 // app.get('/chat-list', authenticateToken, async (req, res) => {
 //   // const userId = req.user.userId;  // Set by your authenticateToken middleware
-//   const userId = new mongoose.Types.ObjectId(req.user.userId);  // Convert string ID to ObjectId
+//   const userId = req.user.userId; //new mongoose.Types.ObjectId(req.user.userId);  // Convert string ID to ObjectId
 //    try {
 //      const chatUsers = await Message.aggregate([
 //        {
