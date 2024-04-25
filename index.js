@@ -558,13 +558,13 @@ app.post('/report', async (req, res) => {
 // });
 
 app.get('/report', async (req, res) => {
-  const adminId =req.headers.userId; // Admin ID sent from the frontend
+  const adminId =req.query.userId; // Admin ID sent from the frontend
   const adminEmail = "musecollaborate@gmail.com";
   
   try {
       // First, verify the admin user
       const adminUser = await User.findById(adminId);
-      if (!adminUser || adminUser.email !== adminEmail) {
+      if (adminUser.email !== adminEmail) {
           res.status(403).send("Access denied. Only specific admins can perform this action.");
           return;
       }
