@@ -12,6 +12,7 @@ const multer = require('multer');
 const router = express.Router();
 const upload = require('./config');
 const Post = require('./models/Post');
+const Profile = require('./models/Profile');
 const Message = require('./models/Message'); 
 const fs = require('fs');
 const dir = './uploads';
@@ -65,10 +66,23 @@ app.post('/register', async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      emailVerified: false
+      emailVerified: false,
     });
 
+    // create and save new user without initializing the profile attribute yet
     const savedUser = await user.save();
+
+    // create default profile using new userId
+    const profile = new Profile({
+      userId: savedUser._id,
+      firstName: savedUser.firstName,
+      lastName: savedUser.lastName
+    });
+    const savedProfile = await profile.save();
+  
+    // Update the user with the profile ID
+    savedUser.profile = savedProfile._id;
+    await savedUser.save();
 
     // Create a verification token
     const token = jwt.sign({ userId: savedUser._id }, jwtSecretKey, { expiresIn: '1h' });
@@ -109,7 +123,7 @@ app.post('/login', async (req, res) => {
     }
 
     res.json({
-      userId: user._id,  // ensure this is the actual ID from MongoDB
+      userId: user._id,  // the logged in user's userId, stored in local storage
       message: 'Login successful. Redirecting to homepage...'
     });
     
@@ -480,7 +494,7 @@ app.post('/profile', upload.single('profilePicture'), async (req, res) => {
   }
 
   // Assuming a user ID is used to find the existing profile
-  const userId = req.body.userId; // This should come from authenticated session or token
+  const userId = req.body.userId; // This should come from teh frontend 
 
   try {
       const profile = await profile.findOneAndUpdate(
