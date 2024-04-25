@@ -31,9 +31,6 @@ const postSchema = new mongoose.Schema({
      },  
     {timestamps: true }); // Mongoose manages createdAt and updatedAt fields automatically
 
-    function arrayLimit(val) {
-        return val.length > 0;
-      }
 
 const Post = mongoose.model('Post', postSchema);
 module.exports = Post;

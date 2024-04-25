@@ -375,30 +375,27 @@ app.get('/search', async (req, res) => {
 app.get('/posts', async (req, res) => {
   try {
     const posts = await Post.find({})
-                            .populate({
-                                path: 'author',
-                                populate: {
-                                  path: 'profile'
-                                }
-                            })
-                            .sort({ createdAt: -1 }); 
-
-    res.json(posts.map(post => ({ postID: post._id, 
-                                  Image: post.imageUrls, 
-                                  tags: post.tags, 
-                                  muserID: post.author, 
-                                  title: post.title, 
-                                  des: post.content,
-                                  profileID: post.author.profile ? post.author.profile._id : null,
-                                  authorName: post.author.firstName + ' ' + post.author.lastName,
-                                  profilePicture: post.author.profile ? post.author.profile.profilePicture : null
+                                .populate({
+                                    path: 'author',
+                                    populate: {
+                                      path: 'profile'
+                                    }
+                                })
+                                .sort({ createdAt: -1 }); 
+      res.json(posts.map(post => ({ postID: post._id, 
+                                    Image: post.imageUrls, 
+                                    tags: post.tags, 
+                                    muserID: post.author, 
+                                    title: post.title, 
+                                    des: post.content
+                                    // profileID: post.author.profile ? post.author.profile._id : null
+                                    // authorName: post.author.firstName + ' ' + post.author.lastName,
+                                    // profilePicture: post.author.profile ? post.author.profile.profilePicture : null
                                 })));
-
   } catch (error) {
       res.status(500).send('Error retrieving posts: ' + error.message);
   }
 });
-
 
 
 // get user's profile by profile ID (used from homepage)
@@ -455,34 +452,34 @@ app.post('/chats', (req, res) => {
 
 
 /**************************************************** PROFILE ************************************************************/
-// // RETRIEVE PROFILE FOR USER------------------------------------------------------------------------------------------------------
-// // Endpoint to get a user's profile by userId
-// app.get('/profile', async (req, res) => {
-//   try {
-//       const { userId } = req.params;
-//       // Validate the userId is a valid ObjectId
-//       if (!mongoose.Types.ObjectId.isValid(userId)) {
-//           return res.status(400).send('Invalid user ID format');
-//       }
+// RETRIEVE PROFILE FOR USER------------------------------------------------------------------------------------------------------
+// Endpoint to get a user's profile by userId
+app.get('/profile/:userId', async (req, res) => {
+  try {
+      const { userId } = req.params;
+      // Validate the userId is a valid ObjectId
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+          return res.status(400).send('Invalid user ID format');
+      }
 
-//       // Fetch the user with the profile populated
-//       const user = await User.findById(userId).populate('profile');
-//       if (!user) {
-//           return res.status(404).send('User not found');
-//       }
+      // Fetch the user with the profile populated
+      const user = await User.findById(userId).populate('profile');
+      if (!user) {
+          return res.status(404).send('User not found');
+      }
 
-//       // Check if the user has a profile
-//       if (!user.profile) {
-//           return res.status(404).send('Profile not found for this user');
-//       }
+      // Check if the user has a profile
+      if (!user.profile) {
+          return res.status(404).send('Profile not found for this user');
+      }
 
-//       // Send back the profile data
-//       res.json(user.profile);
-//   } catch (error) {
-//       console.error('Error fetching profile:', error);
-//       res.status(500).send('Server error while retrieving profile');
-//   }
-// });
+      // Send back the profile data
+      res.json(user.profile);
+  } catch (error) {
+      console.error('Error fetching profile:', error);
+      res.status(500).send('Server error while retrieving profile');
+  }
+});
 
 
 
@@ -502,8 +499,8 @@ app.post('/profile', upload.single('profilePicture'), async (req, res) => {
   const userId = req.body.userId; // This should come from teh frontend 
 
   try {
-      const profile = await profile.findOneAndUpdate(
-          { user: userId }, // Use the user ID as a reference
+      const profile = await Profile.findOneAndUpdate(
+          { userId: userId }, // Use the user ID as a reference
           {
               profilePicture,
               firstName,
