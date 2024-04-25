@@ -374,16 +374,43 @@ app.get('/search', async (req, res) => {
 // DISPLAY POSTS ON HOMEPAGE ------------------------------------------------------------------------------------------------
 app.get('/posts', async (req, res) => {
   try {
-      const posts = await Post.find({})
-                              .sort({ createdAt: -1 }); 
-      res.json(posts.map(post => ({ postID: post._id, 
-                                    Image: post.imageUrls, 
-                                    tags: post.tags, 
-                                    muserID: post.author, 
-                                    title: post.title, 
-                                    des: post.content })));
+    const posts = await Post.find({})
+                            .populate({
+                                path: 'author',
+                                populate: {
+                                  path: 'profile'
+                                }
+                            })
+                            .sort({ createdAt: -1 }); 
+
+    res.json(posts.map(post => ({ postID: post._id, 
+                                  Image: post.imageUrls, 
+                                  tags: post.tags, 
+                                  muserID: post.author, 
+                                  title: post.title, 
+                                  des: post.content,
+                                  profileID: post.author.profile ? post.author.profile._id : null,
+                                  authorName: post.author.firstName + ' ' + post.author.lastName,
+                                  profilePicture: post.author.profile ? post.author.profile.profilePicture : null
+                                })));
+
   } catch (error) {
       res.status(500).send('Error retrieving posts: ' + error.message);
+  }
+});
+
+
+
+// get user's profile by profile ID (used from homepage)
+app.get('/userProfile', async (req, res) => {
+  try {
+    const profile = await Profile.findById(req.params.profileId);
+    if (!profile) {
+      return res.status(404).send('Profile not found');
+    }
+    res.json(profile);
+  } catch (error) {
+    res.status(500).send('Error retrieving profile: ' + error.message);
   }
 });
 
@@ -427,61 +454,38 @@ app.post('/chats', (req, res) => {
 
 
 
-//Get chat list: all users a person has messaged or received messages from
-// app.get('/chat-list', authenticateToken, async (req, res) => {
-//   // const userId = req.user.userId;  // Set by your authenticateToken middleware
-//   const userId = req.user.userId; //new mongoose.Types.ObjectId(req.user.userId);  // Convert string ID to ObjectId
-//    try {
-//      const chatUsers = await Message.aggregate([
-//        {
-//          $match: {
-//            $or: [{ sender: userId }, { receiver: userId }]
-//          }
-//        },
-//        {
-//          $group: {
-//            _id: null,
-//            users: { $addToSet: "$sender", $addToSet: "$receiver" }
-//          }
-//        },
-//        {
-//          $project: {
-//            users: 1,
-//            _id: 0
-//          }
-//        },
-//        { $unwind: "$users" }, // Flatten the users array
-//        { $match: { users: { $ne: userId } } }, // Exclude the current user's id
-//        {
-//          $lookup: {
-//            from: "users", // Assuming 'users' is your collection name for User documents
-//            localField: "users",
-//            foreignField: "_id",
-//            as: "userDetails"
-//          }
-//        },
-//        { $unwind: "$userDetails" },
-//        {
-//          $project: { // Adjust fields according to your User model
-//            userId: "$userDetails._id",
-//            username: "$userDetails.username",
-//            email: "$userDetails.email"
-//          }
-//        }
-//      ]);
- 
-//      res.json({ chatList: chatUsers });
-//    } catch (error) {
-//      console.error("Failed to retrieve chat list:", error);
-//      res.status(500).send("Server error while retrieving chat list");
-//    }
-//  });
-
-
-
-
-
 /**************************************************** PROFILE ************************************************************/
+// // RETRIEVE PROFILE FOR USER------------------------------------------------------------------------------------------------------
+// // Endpoint to get a user's profile by userId
+// app.get('/profile', async (req, res) => {
+//   try {
+//       const { userId } = req.params;
+//       // Validate the userId is a valid ObjectId
+//       if (!mongoose.Types.ObjectId.isValid(userId)) {
+//           return res.status(400).send('Invalid user ID format');
+//       }
+
+//       // Fetch the user with the profile populated
+//       const user = await User.findById(userId).populate('profile');
+//       if (!user) {
+//           return res.status(404).send('User not found');
+//       }
+
+//       // Check if the user has a profile
+//       if (!user.profile) {
+//           return res.status(404).send('Profile not found for this user');
+//       }
+
+//       // Send back the profile data
+//       res.json(user.profile);
+//   } catch (error) {
+//       console.error('Error fetching profile:', error);
+//       res.status(500).send('Server error while retrieving profile');
+//   }
+// });
+
+
+
 // EDIT PROFILE ------------------------------------------------------------------------------------------------------------------
 // Endpoint to update or create profile with profile picture, INCOMPLETE, USERID SHOULD COME FROM AUTHENTICATED SESSION
 app.post('/profile', upload.single('profilePicture'), async (req, res) => {
